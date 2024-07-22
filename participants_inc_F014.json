@@ -1,0 +1,119 @@
+{
+  "M015": {
+    "ses-3T1": {
+      "sessID": 237591,
+      "func": {
+        "retinotopy": [9, 10, 11, 12, 13, 14, 15, 16]
+      },
+      "anat": null,
+      "fmap": null
+    },
+    "ses-7T1": {
+      "sessID": 341326,
+      "func": {
+        "retinotopy": [9, 11, 13, 15, 17, 19, 21, 23, 25, 27],
+        "restingState": [29]
+      },
+      "anat": null,
+      "fmap": {
+        "b0": 5,
+        "funcNoEPI": 8
+      }
+    },
+    "ses-7T2": {
+      "sessID": 346508,
+      "func": {
+        "retinotopy": [10, 12, 14, 16, 18, 20],
+        "restingState": [22]
+      },
+      "anat": null,
+      "fmap": {
+        "b0": 5,
+        "funcNoEPI": 7
+      }
+    }
+  },
+  "F014": {
+    "ses-3T1": {
+      "sessID": 237642,
+      "func": {
+        "retinotopy": [5, 6, 7, 9, 10, 11, 17, 18]
+      },
+      "anat": 2,
+      "fmap": null
+    }
+  },
+  "F013": {
+    "ses-3T1": {
+      "sessID": 237653,
+      "func": {
+          "retinotopy": [5, 6, 7, 9, 10, 11, 15, 16]
+      },
+      "anat": null,
+      "fmap": null
+      },
+    "ses-7T1": {
+      "sessID": 341248,
+      "func": {
+          "retinotopy": [11, 13, 15, 17, 21, 23, 25, 27],
+          "restingState": [31]
+      },
+      "anat": null,
+      "fmap": {
+          "b0": 5,
+          "funcNoEPI": 8
+      }
+    }
+  },
+  "M012": {
+    "ses-3T1": {
+      "sessID": 237690,
+      "func": {
+        "retinotopy": [5, 6, 7, 9, 10, 11]
+      },
+      "anat": null,
+      "fmap": null
+    },
+    "ses-7T1": {
+      "sessID": 341267,
+      "func": {
+        "retinotopy": [9, 11, 13, 15, 17, 19, 21, 23, 25, 27],
+        "restingState": [29]
+      },
+      "anat": null,
+      "fmap": {
+        "b0": 5,
+        "funcNoEPI": 8
+      }
+    },
+    "ses-7T2": {
+      "sessID": 342211,
+      "func": {
+        "retinotopy": [8, 10, 12, 14, 16, 18, 20, 22, 24, 26],
+        "restingState": [28]
+      },
+      "anat": null,
+      "fmap": {
+        "b0": 5,
+        "funcNoEPI": 7
+      }
+    }
+  },
+  "F016": {
+    "ses-7T1": {
+      "sessID": 341844,
+      "func": {
+        "retinotopy": [9, 11, 13, 15, 17, 19, 21, 23, 25],
+        "restingState": [27]
+      },
+      "anat": null,
+      "fmap": {
+        "b0": 5,
+        "funcNoEPI": 8
+      }
+    }
+  }
+}
+
+
+

@@ -7,7 +7,7 @@ import numpy as np
 subject = 'M015'
 session = '7T1'
 run = 'mean_before_prf'
-hemi = 'rh'
+hemi = 'lh'
 colormap = ['colorwheel', 'red_yellow_green'][0]
 fs_subj_dir = f'{os.environ["SUBJECTS_DIR"]}/sub-{subject}'
 os.chdir(PROJ_DIR)
@@ -16,7 +16,7 @@ surface = f'{fs_subj_dir}/surf/{hemi}.inflated'
 overlay = f'{run_dir}/polar_angle_{hemi}.mgh'
 mask = f'derivatives/ROIs/sub-{subject}/ses-{session}/mask_analyzed_{hemi}.label'
 
-# colormap where vertical meridians are marked with red (90) and green (180)
+# colormap where vertical meridians are marked with red (90) and green (270)
 if colormap == 'red_yellow_green':
     cmap = (
         '0,255,255,0,'

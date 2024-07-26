@@ -1,9 +1,9 @@
 # /usr/bin/python
 # Created by David Coggan on 2022 11 02
-"""
+'''
 prepares directory structure and extracts/copies raw data from sourcedata
 For future projects, try to use dcm2bids (https://andysbrainbook.readthedocs.io/en/latest/OpenScience/OS/BIDS_Overview.html)
-"""
+'''
 
 import os
 import os.path as op
@@ -20,14 +20,14 @@ from .config import PROJ_DIR
 
 def orient_func(func: str = None):
 
-    """
+    '''
     Reorients raw data in nifti file (in place) by a left-right flip, if header
     states orientation is 'Left-to-Right'.
     Different acquisitions can arrive in different orientations, e.g. at
-    3T we get a Right-to-Left and at 7T we get a Left-to-Right acquisition.
-    This is not an issue for FSL tools, as this information is stored in the
-    file header, but any tool which looks at the raw data will need it
-    oriented identically across 3T and 7T.
+    3T we typically get a Right-to-Left and at 7T we get a Left-to-Right
+    acquisition. This is not an issue for FSL tools, as this information is
+    stored in the file header, but any tool which looks at the raw data will
+    need it oriented identically across 3T and 7T.
     WARNING: After fslswapdim, the 'Left-to-Right' signature will still be in
     the file header, but the stored data will be reoriented and the orientation
     matrix will be flipped (which is less preferable than renaming the
@@ -35,7 +35,7 @@ def orient_func(func: str = None):
 
     Args:
         func (str): path to functional image to be reoriented
-    """
+    '''
 
     func_orient = os.popen(f'fslhd {func} | grep "qform_xorient"').read()
     if 'Left-to-Right' in func_orient:
@@ -43,47 +43,55 @@ def orient_func(func: str = None):
 
 def initialise_BIDS():
 
-    print(f"Initializing BIDS...")
-    subjects = json.load(open(f"participants.json", "r+"))
+    '''
+    Prepares directory structure and extracts/copies raw data from sourcedata
+    This is somewhat specific to the current project and is designed to
+    satisfy the very stringent bids requirements concerning filenames,
+    directory structure etc., and also to facilitate preprocessing with
+    fmriprep.
+    '''
+
+    print(f'Initializing BIDS...')
+    subjects = json.load(open(f'participants.json', 'r+'))
     for subject, sessions in subjects.items():
         for session, session_info in sessions.items():
 
-            filetypes = ["nii","json"] # do not include other filetypes that may cause BIDS errors
-            sourcedir = f"sourcedata/sub-{subject}/{session}/raw_data"
-            sessID = session_info["sessID"]
+            filetypes = ['nii','json'] # do not include other filetypes that may cause BIDS errors
+            sourcedir = f'sourcedata/sub-{subject}/{session}/raw_data'
+            sessID = session_info['sessID']
 
             # detect DICOM or NIFTI format for raw data
-            if len(glob.glob(f"{sourcedir}/*.DCM")): # if DICOM format
-                os.system(f"dcm2niix {op.abspath(sourcedir)}")  # convert
+            if len(glob.glob(f'{sourcedir}/*.DCM')): # if DICOM format
+                os.system(f'dcm2niix {op.abspath(sourcedir)}')  # convert
                 copy_or_move = shutil.move  # move files, don't copy
             else: # if NIFTI format
                 copy_or_move = shutil.copy  # copy files, don't move
 
 
             ### ANAT ###
-            anatscan = session_info["anat"]
+            anatscan = session_info['anat']
             if anatscan is not None:
 
-                anatdir = f"sub-{subject}/{session}/anat"
+                anatdir = f'sub-{subject}/{session}/anat'
                 os.makedirs(anatdir, exist_ok=True)
 
                 # json file
-                files = glob.glob(f"{sourcedir}/*{sessID}.{anatscan:02}*.json")
+                files = glob.glob(f'{sourcedir}/*{sessID}.{anatscan:02}*.json')
                 assert len(files) == 1
                 inpath = files[0]
-                outpath = f"{anatdir}/sub-{subject}_{session}_T1w.json"
+                outpath = f'{anatdir}/sub-{subject}_{session}_T1w.json'
                 if not op.isfile(outpath):
                     copy_or_move(inpath, outpath)
 
                 # nii file
-                files = glob.glob(f"{sourcedir}/*{sessID}.{anatscan:02}*.nii")
+                files = glob.glob(f'{sourcedir}/*{sessID}.{anatscan:02}*.nii')
                 assert len(files) == 1
                 inpath = files[0]
 
             else:
 
                 anat_ses = 'anat'
-                anatdir = f"sub-{subject}/ses-{anat_ses}/anat"
+                anatdir = f'sub-{subject}/ses-{anat_ses}/anat'
                 os.makedirs(anatdir, exist_ok=True)
 
                 # if no anatomical, use most recent anatomical
@@ -102,7 +110,7 @@ def initialise_BIDS():
                             inpath = files[-1]
                         proj_counter += 1
 
-                outpath = f"{anatdir}/sub-{subject}_ses-anat_T1w.json"
+                outpath = f'{anatdir}/sub-{subject}_ses-anat_T1w.json'
                 if not op.isfile(outpath):
                     shutil.copy(inpath, outpath)
 
@@ -110,7 +118,7 @@ def initialise_BIDS():
                 inpath = f'{inpath[:-5]}.nii'
 
             # deidentify anatomical image
-            #outpath = f"{anatdir}/sub-{subject}_{session}_T1w.nii"
+            #outpath = f'{anatdir}/sub-{subject}_{session}_T1w.nii'
             #if not op.isfile(outpath):
             #   os.system(f'mideface --i {inpath} --o {outpath}')
 
@@ -123,22 +131,22 @@ def initialise_BIDS():
 
             ### FUNC ###
 
-            funcdir = f"sub-{subject}/{session}/func"
+            funcdir = f'sub-{subject}/{session}/func'
             os.makedirs(funcdir, exist_ok=True)
-            fmapdir = f"sub-{subject}/{session}/fmap"
+            fmapdir = f'sub-{subject}/{session}/fmap'
             os.makedirs(fmapdir, exist_ok=True)
             topup_counter = 1  # BIDS doesn't like task names in topup files so set a run number that is unique across tasks
 
-            for funcscan in session_info["func"]:
-                for run, scan_num in enumerate(session_info["func"][funcscan]):
+            for funcscan in session_info['func']:
+                for run, scan_num in enumerate(session_info['func'][funcscan]):
 
                     for ft in filetypes:
-                        files = glob.glob(f"{sourcedir}/*{sessID}.{scan_num:02}*.{ft}")
+                        files = glob.glob(f'{sourcedir}/*{sessID}.{scan_num:02}*.{ft}')
                         assert len(files) == 1
                         inpath = files[0]
-                        outpath = (f"{funcdir}/sub-{subject}_{session}_task"
-                                   f"-{funcscan}_dir-AP_run-{run+1}_bold."
-                                   f"{ft}")
+                        outpath = (f'{funcdir}/sub-{subject}_{session}_task'
+                                   f'-{funcscan}_dir-AP_run-{run+1}_bold.'
+                                   f'{ft}')
                         if not op.isfile(outpath):
                             copy_or_move(inpath,outpath)
                         if outpath.endswith('nii'):
@@ -146,22 +154,22 @@ def initialise_BIDS():
 
 
                     # add required meta data to json file
-                    scandata = json.load(open(outpath, "r+"))
-                    if "TaskName" not in scandata:
-                        scandata["TaskName"] = funcscan
-                    if "PhaseEncodingDirection" not in scandata:
-                        scandata["PhaseEncodingDirection"] = "j-"
-                    if "SliceTiming" not in scandata:
-                        scandata["SliceTiming"] = philips_slice_timing(outpath)
-                    if "TotalReadoutTime" not in scandata:
-                        if "EstimatedTotalReadoutTime" in scandata:
-                            scandata["TotalReadoutTime"] = scandata[
-                                "EstimatedTotalReadoutTime"]
+                    scandata = json.load(open(outpath, 'r+'))
+                    if 'TaskName' not in scandata:
+                        scandata['TaskName'] = funcscan
+                    if 'PhaseEncodingDirection' not in scandata:
+                        scandata['PhaseEncodingDirection'] = 'j-'
+                    if 'SliceTiming' not in scandata:
+                        scandata['SliceTiming'] = philips_slice_timing(outpath)
+                    if 'TotalReadoutTime' not in scandata:
+                        if 'EstimatedTotalReadoutTime' in scandata:
+                            scandata['TotalReadoutTime'] = scandata[
+                                'EstimatedTotalReadoutTime']
                         else:
                             # this value was consistently found in other
                             # experiments using the same scan acquisition
-                            scandata["TotalReadoutTime"] = 0.030498
-                    json.dump(scandata, open(outpath, "w+"),
+                            scandata['TotalReadoutTime'] = 0.030498
+                    json.dump(scandata, open(outpath, 'w+'),
                               sort_keys=True, indent=4)
 
                     # repeat for top up file (assumes next scan was top up scan)
@@ -170,12 +178,12 @@ def initialise_BIDS():
                         nifti_target = outpath.replace('json', 'nii')
                         for ft in filetypes:
                             files = glob.glob(
-                                f"{sourcedir}/*{sessID}.{scan_num+1:02}*.{ft}")
+                                f'{sourcedir}/*{sessID}.{scan_num+1:02}*.{ft}')
                             assert len(files) == 1 and 'TU' in files[0]
                             inpath = files[0]
                             outpath = (
-                                f"{fmapdir}/sub-{subject}_{session}_acq-topup_"
-                                f"dir-PA_run-{topup_counter}_epi.{ft}")
+                                f'{fmapdir}/sub-{subject}_{session}_acq-topup_'
+                                f'dir-PA_run-{topup_counter}_epi.{ft}')
                             if not op.isfile(outpath):
                                 copy_or_move(inpath, outpath)
                             if outpath.endswith('nii'):
@@ -183,54 +191,54 @@ def initialise_BIDS():
                         topup_counter += 1
 
                         # add required meta data to json file
-                        scandata = json.load(open(outpath, "r+"))
-                        if "PhaseEncodingDirection" not in scandata:
-                            scandata["PhaseEncodingDirection"] = "j"
-                        if "SliceTiming" not in scandata:
-                            scandata["SliceTiming"] = philips_slice_timing(
+                        scandata = json.load(open(outpath, 'r+'))
+                        if 'PhaseEncodingDirection' not in scandata:
+                            scandata['PhaseEncodingDirection'] = 'j'
+                        if 'SliceTiming' not in scandata:
+                            scandata['SliceTiming'] = philips_slice_timing(
                                 outpath)
-                        if "EstimatedTotalReadoutTime" in scandata:
-                            scandata["TotalReadoutTime"] = scandata[
-                                "EstimatedTotalReadoutTime"]
+                        if 'EstimatedTotalReadoutTime' in scandata:
+                            scandata['TotalReadoutTime'] = scandata[
+                                'EstimatedTotalReadoutTime']
                         else:
                             # this value was consistently found in other
                             # experiments using the same scan acquisition
-                            scandata["TotalReadoutTime"] = 0.030498
-                        if "IntendedFor" not in scandata:
-                            scandata["IntendedFor"] = nifti_target[9:]
-                        json.dump(scandata, open(outpath, "w+"),
+                            scandata['TotalReadoutTime'] = 0.030498
+                        if 'IntendedFor' not in scandata:
+                            scandata['IntendedFor'] = nifti_target[9:]
+                        json.dump(scandata, open(outpath, 'w+'),
                                   sort_keys=True, indent=4)
 
 
             ### FMAP ###
 
             # b0
-            for c, component in enumerate(["magnitude", "fieldmap"]):
+            for c, component in enumerate(['magnitude', 'fieldmap']):
                 if 'b0' in session_info['fmap']:
                     b0scan = session_info['fmap']['b0']
                     for ft in filetypes:
-                        files = glob.glob(f"{sourcedir}/*{sessID}.{b0scan:02}"
-                                          f"*B0_shimmed*e{c+1}*.{ft}")
+                        files = glob.glob(f'{sourcedir}/*{sessID}.{b0scan:02}'
+                                          f'*B0_shimmed*e{c+1}*.{ft}')
                         assert len(files) == 1
                         inpath = files[0]
-                        outpath = (f"{fmapdir}/sub-{subject}_{session}_acq-b0_"
-                                   f"{component}.{ft}")
+                        outpath = (f'{fmapdir}/sub-{subject}_{session}_acq-b0_'
+                                   f'{component}.{ft}')
                         if not op.isfile(outpath):
                             copy_or_move(inpath, outpath)
 
                 # add required meta data to json file
-                scandata = json.load(open(outpath, "r+"))
-                if "IntendedFor" not in scandata:
+                scandata = json.load(open(outpath, 'r+'))
+                if 'IntendedFor' not in scandata:
                     intendedscans = glob.glob(
-                        f"sub-{subject}/{session}/anat/*.nii")
+                        f'sub-{subject}/{session}/anat/*.nii')
                     if '3T' in session:  # no topup for 3T so do b0 correction
                         intendedscans += glob.glob(
-                            f"sub-{subject}/{session}/func/*.nii")
-                    scandata["IntendedFor"] = sorted(
+                            f'sub-{subject}/{session}/func/*.nii')
+                    scandata['IntendedFor'] = sorted(
                         [x[9:] for x in intendedscans])
-                if component == "fieldmap" and "Units" not in scandata:
-                    scandata["Units"] = "Hz"
-                json.dump(scandata, open(outpath, "w+"), sort_keys=True,
+                if component == 'fieldmap' and 'Units' not in scandata:
+                    scandata['Units'] = 'Hz'
+                json.dump(scandata, open(outpath, 'w+'), sort_keys=True,
                           indent=4)
 
 
@@ -239,11 +247,11 @@ def initialise_BIDS():
                 funcNoEPI = session_info['fmap']['funcNoEPI']
                 for ft in filetypes:
                     files = glob.glob(
-                        f"{sourcedir}/*{sessID}.{funcNoEPI:02}*.{ft}")
+                        f'{sourcedir}/*{sessID}.{funcNoEPI:02}*.{ft}')
                     assert len(files) == 1
                     inpath = files[0]
-                    outpath = (f"{fmapdir}/sub-{subject}_{session}_acq-funcNoEPI_"
-                               f"magnitude.{ft}")
+                    outpath = (f'{fmapdir}/sub-{subject}_{session}_acq-funcNoEPI_'
+                               f'magnitude.{ft}')
                     if not op.isfile(outpath):
                         copy_or_move(inpath, outpath)
 
@@ -253,8 +261,7 @@ def initialise_BIDS():
                         # affects reg. Therefore, use fslroi to get the
                         # header and nibabel to get the data.
                         if subject == 'F019' and ft == 'nii':
-                            orig_data = nib.load(outpath).get_fdata()[:, :,
-                                        4:-4]
+                            orig_data = nib.load(outpath).get_fdata()[..., 4:-4]
                             os.system(f'fslroi {outpath} {outpath} '
                                       f'0 -1 0 -1 4 38')
                             nifti = nib.load(f'{outpath}.gz')
@@ -264,7 +271,7 @@ def initialise_BIDS():
                             os.remove(f'{outpath}.gz')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     start = time.time()
     os.chdir(PROJ_DIR)

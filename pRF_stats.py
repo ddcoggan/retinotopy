@@ -21,14 +21,23 @@ def prf_stats():
         outdir = f'derivatives/pRF/sub-{subject}/ses-{session}/mean_before_prf'
         roi_dir = f'derivatives/ROIs/sub-{subject}/ses-{session}'
         ref_func = glob.glob(f'derivatives/registration/sub-{subject}/'
-                    f'ses-{session}/example_func.nii*')[0]
+                             f'ses-{session}/example_func.nii*')[0]
         reg = (f'derivatives/registration/sub-{subject}/ses-{session}/'
                f'example_func2highres.lta')
 
         # V1 labels to nifti
         fs_subj_dir = f'{os.environ["SUBJECTS_DIR"]}/sub-{subject}'
         for hemi in ['lh', 'rh']:
+
+            # label should either exist or be created by merging dorsal, ventral
             label = f'{fs_subj_dir}/label/{hemi}.tong.V1.label'
+            if not op.isfile(label):
+                os.system(f'mri_mergelabels '
+                          f'-i {label.replace(".V1.", ".V1d.")} '
+                          f'-i {label.replace(".V1.", ".V1v.")} '
+                          f'-o {label}')
+
+            # label to nifti
             outpath = f'{roi_dir}/V1_{hemi}.nii.gz'
             if not op.isfile(outpath):
                 os.system(
@@ -41,7 +50,7 @@ def prf_stats():
                     f'--o {outpath}')
 
         # combine across hemispheres
-        V1s = glob.glob(f'{roi_dir}/V1*.nii.gz')
+        V1s = glob.glob(f'{roi_dir}/V1_?h.nii.gz')
         V1 = f'{roi_dir}/V1.nii.gz'
         if not op.isfile(V1):
             os.system(f'fslmaths {" -add ".join(V1s)} -bin {V1}')

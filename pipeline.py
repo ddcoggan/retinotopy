@@ -27,7 +27,7 @@ if __name__ == "__main__":
     os.chdir(PROJ_DIR)
 
     # initialise BIDS dataset
-    # requires a configured participants_inc_F014.json file and raw data downloaded
+    # requires a configured participants.json file and raw data downloaded
     # and unpacked in sourcedata
     from utils import initialise_BIDS
     initialise_BIDS()

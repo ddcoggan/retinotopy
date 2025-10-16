@@ -4,7 +4,7 @@ from utils.config import PROJ_DIR
 import matplotlib as mpl
 import numpy as np
 
-subject = 'M015'
+subject = 'F019'
 session = '7T1'
 run = 'mean_before_prf'
 hemi = 'lh'
@@ -14,7 +14,12 @@ os.chdir(PROJ_DIR)
 run_dir = op.abspath(f'derivatives/pRF/sub-{subject}/ses-{session}/{run}')
 surface = f'{fs_subj_dir}/surf/{hemi}.inflated'
 overlay = f'{run_dir}/polar_angle_{hemi}.mgh'
-mask = f'derivatives/ROIs/sub-{subject}/ses-{session}/mask_analyzed_{hemi}.label'
+#overlay = f'{run_dir}/r2_{hemi}.mgh'
+mask = op.abspath(f'derivatives/ROIs/sub-{subject}/ses-{session}/mask_r2_thresh_{hemi}.label')
+#mask = op.abspath(f'derivatives/ROIs/sub-{subject}/ses-{session}/mask_analyzed_{hemi}.label')
+label = f'{fs_subj_dir}/label/{hemi}.tong.V1.label'
+for file in [surface, overlay, mask, label]:
+    assert op.isfile(file), f'cannot find {file}'
 
 # colormap where vertical meridians are marked with red (90) and green (270)
 if colormap == 'red_yellow_green':
@@ -47,8 +52,12 @@ cmd = (
     f'-f {surface}'
     f':overlay={overlay}'
     f':curvature_method=binary'
-    f':overlay_custom={cmap} '
-    #f':overlay_mask={mask} '
-    f'-layout 1 -viewport 3d')
-
+    f':overlay_custom={cmap}'
+    f':overlay_smooth=8'
+    f':overlay_mask={mask}'
+    f':label={label}'
+    f':label_outline=true'
+    f':label_color=white'
+    f' -layout 1 -viewport 3d')
+print(cmd)
 os.system(cmd)

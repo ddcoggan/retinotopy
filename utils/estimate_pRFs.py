@@ -49,13 +49,13 @@ def estimate_pRFs():
                               f'-add {tmean} -nan {func_local}')
                     os.remove(tmean)
             """
-            # analyze separately for each run
+            # option 1: analyze separately for each run
             funcs = sorted(glob.glob(f'{sess_dir}/timeseries_run*.nii.gz'))
             funcs = [op.abspath(f) for f in funcs]
             if not op.isfile(f'{sess_dir}/prfs.mat'):
                 prf(funcs, mask, sess_dir, TR, True, stim)
             """
-            # analyze mean timeseries across all runs in session
+            # option 2: analyze mean timeseries across all runs in session
             out_dir = f'{sess_dir}/mean_before_prf'
             os.makedirs(out_dir, exist_ok=True)
             func = f'{out_dir}/timeseries.nii.gz'
@@ -66,7 +66,7 @@ def estimate_pRFs():
             if not op.isfile(f'{out_dir}/prfs.mat'):
                 prf([func], mask, out_dir, TR, True, stim)
             """
-            # analyze concatenated timeseries across all runs in session
+            # option 3: analyze concatenated timeseries across all runs in session
             out_dir = f'{sess_dir}/concatenated_before_prf'
             os.makedirs(out_dir, exist_ok=True)
             func_concat = f'{out_dir}/timeseries.nii.gz'

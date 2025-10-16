@@ -20,9 +20,9 @@ from .config import PROJ_DIR
 
 def orient_func(func: str = None):
 
-    '''
+    """
     Reorients raw data in nifti file (in place) by a left-right flip, if header
-    states orientation is 'Left-to-Right'.
+    states orientation is 'Left-to-Right'. Otherwise, it does nothing.
     Different acquisitions can arrive in different orientations, e.g. at
     3T we typically get a Right-to-Left and at 7T we get a Left-to-Right
     acquisition. This is not an issue for FSL tools, as this information is
@@ -35,36 +35,37 @@ def orient_func(func: str = None):
 
     Args:
         func (str): path to functional image to be reoriented
-    '''
+    """
 
     func_orient = os.popen(f'fslhd {func} | grep "qform_xorient"').read()
     if 'Left-to-Right' in func_orient:
         os.system(f'fslswapdim {func} -x y z {func}')
 
+
 def initialise_BIDS():
 
-    '''
-    Prepares directory structure and extracts/copies raw data from sourcedata
+    """
+    Prepares directory structure and extracts/copies raw data from sourcedata.
     This is somewhat specific to the current project and is designed to
     satisfy the very stringent bids requirements concerning filenames,
     directory structure etc., and also to facilitate preprocessing with
     fmriprep.
-    '''
+    """
 
     print(f'Initializing BIDS...')
     subjects = json.load(open(f'participants.json', 'r+'))
     for subject, sessions in subjects.items():
         for session, session_info in sessions.items():
 
-            filetypes = ['nii','json'] # do not include other filetypes that may cause BIDS errors
+            filetypes = ['nii','json']  # other filetypes may cause BIDS errors
             sourcedir = f'sourcedata/sub-{subject}/{session}/raw_data'
             sessID = session_info['sessID']
 
             # detect DICOM or NIFTI format for raw data
-            if len(glob.glob(f'{sourcedir}/*.DCM')): # if DICOM format
+            if len(glob.glob(f'{sourcedir}/*.DCM')):  # if DICOM format
                 os.system(f'dcm2niix {op.abspath(sourcedir)}')  # convert
                 copy_or_move = shutil.move  # move files, don't copy
-            else: # if NIFTI format
+            else:  # if NIFTI format
                 copy_or_move = shutil.copy  # copy files, don't move
 
 
@@ -100,7 +101,8 @@ def initialise_BIDS():
                 if subject == 'F013':
                     inpath = 'sourcedata/sub-F013/ses-anat/Tong_352144.04.01.10-24-00.WIP_RL_MPRAGE0.6mm_PEdirRL_SENSE.01.json'
                 else:
-                    proj_dirs = sorted(['p022_occlusion/in_vivo/fMRI/exp2'])
+                    proj_dirs = sorted([
+                        'p022_occlusion/data/in_vivo/fMRI/exp2'])
                     inpath = None
                     proj_counter = 0
                     while not inpath:
@@ -135,7 +137,7 @@ def initialise_BIDS():
             os.makedirs(funcdir, exist_ok=True)
             fmapdir = f'sub-{subject}/{session}/fmap'
             os.makedirs(fmapdir, exist_ok=True)
-            topup_counter = 1  # BIDS doesn't like task names in topup files so set a run number that is unique across tasks
+            topup_counter = 1  # BIDS requires unique run no. for each TU scan
 
             for funcscan in session_info['func']:
                 for run, scan_num in enumerate(session_info['func'][funcscan]):
@@ -173,8 +175,9 @@ def initialise_BIDS():
                               sort_keys=True, indent=4)
 
                     # repeat for top up file (assumes next scan was top up scan)
-                    # find data
-                    if '7T' in session:
+                    if '7T' in session:  # only 7T has topup scans
+
+                        # find data
                         nifti_target = outpath.replace('json', 'nii')
                         for ft in filetypes:
                             files = glob.glob(
@@ -255,11 +258,15 @@ def initialise_BIDS():
                     if not op.isfile(outpath):
                         copy_or_move(inpath, outpath)
 
-                        # Too many slices for F019, trim the top and bottom 4
-                        # slices. fslroi automatically handles the positional
-                        # shift but annoyingly rescales the data which
-                        # affects reg. Therefore, use fslroi to get the
-                        # header and nibabel to get the data.
+                        """
+                        Too many slices for F019, trim the top and bottom 4 
+                        slices. fslroi correctly handles the new data 
+                        position in the file header, but rescales the raw data 
+                        which affects registration. Nibabel preserves the raw 
+                        data but doesn't handle the position well. Therefore, 
+                        use fslroi to get the header and nibabel to get the 
+                        data.
+                        """
                         if subject == 'F019' and ft == 'nii':
                             orig_data = nib.load(outpath).get_fdata()[..., 4:-4]
                             os.system(f'fslroi {outpath} {outpath} '

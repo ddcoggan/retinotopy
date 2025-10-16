@@ -6,8 +6,7 @@ Contains variables and functions that are useful across fMRI experiments
 
 import json
 
-MSTR_DIR = '/home/tonglab/david/master_scripts'
-PROJ_DIR = '/mnt/NVMe2_1TB/p013_retinotopyTongLab'
+PROJ_DIR = 'data'
 
 # subjects
 subjects = json.load(open(f'{PROJ_DIR}/participants.json', 'r+'))

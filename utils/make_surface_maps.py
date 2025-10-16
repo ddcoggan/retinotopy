@@ -18,8 +18,8 @@ def make_surface_maps(overwrite=False):
         session = prf_dir.split('/')[3]
         reg = (f'derivatives/registration/sub-{subject}/'
                f'{session}/example_func2highres.lta')
-        roi = (f'derivatives/ROIs/sub-{subject}/{session}/'
-               f'mask_analyzed.nii.gz')
+        roi_dir = f'derivatives/ROIs/sub-{subject}/{session}'
+        roi = f'{roi_dir}/mask_analyzed.nii.gz'
 
         # for left hemisphere, any smoothing in the polar angle map will
         # cause issues where the map wraps around the 0/360 degree boundary.
@@ -36,7 +36,7 @@ def make_surface_maps(overwrite=False):
             nii = glob.glob(f'{prf_dir}/{parameter}.nii*')[0]
             os.system(f'fslcpgeom {example_func} {nii}')
 
-        # convert  to surface
+        # convert to surface
         for parameter in parameters:
             for hemi in ['lh','rh']:
 
@@ -50,6 +50,27 @@ def make_surface_maps(overwrite=False):
                     os.system(
                         f'mri_vol2surf --mov {nifti} --out {surface} '
                         f'--reg {reg} --hemi {hemi} --interp nearest')
+
+        # make label to mask out unanalyzed or low r2 voxels
+        thresh = 10
+        roi_r2_thresh = f'{roi_dir}/mask_r2_thresh.nii.gz'
+        if not op.isfile(roi_r2_thresh) or overwrite:
+            r2 = f'{prf_dir}/r2.nii'
+            os.system(f'fslmaths {r2} -nan -thr {thresh} -bin {roi_r2_thresh}')# -mul {roi}
+
+        # convert to labels
+        for hemi in ['lh','rh']:
+            surface = roi_r2_thresh.replace('.nii.gz', f'_{hemi}.mgh')
+            if not op.isfile(surface) or overwrite:
+                print('Converting cortex mask to surface label...')
+                os.system(
+                    f'mri_vol2surf --mov {roi_r2_thresh} '
+                    f'--out {surface} --reg {reg} '
+                    f'--hemi {hemi} --interp nearest')
+            label = surface.replace('.mgh', '.label')
+            if not op.isfile(label) or overwrite:
+                os.system(f'mri_cor2label --i {surface} '
+                          f'--surf sub-{subject} {hemi} --id 1 --l {label}')
 
 if __name__ == "__main__":
     make_surface_maps()

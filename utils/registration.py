@@ -148,7 +148,8 @@ def registration(subjects=None, overwrite=[]):
                 if not op.exists(out_path):
                     os.system(f'ln -s {path} {out_path}')
 
-            method = 'FSL'  # some subjects may do better with freesurfer method
+            method = 'freesurfer'  # some subjects may do better with
+            # freesurfer method
 
             # reference images
             if not len(glob.glob(f'{reg_dir}/example_func.nii*')):
